@@ -5,8 +5,10 @@
 # Test docker files
 **/test.Dockerfile
 
+# Config files
 docker-leaks
 dockerleaks
+dockerleaks.yml
 
 # Created by https://www.toptal.com/developers/gitignore/api/emacs,macos,jetbrains+all,go
 # Edit at https://www.toptal.com/developers/gitignore?templates=emacs,macos,jetbrains+all,go
