@@ -27,12 +27,32 @@ func runDetect(cmd *cobra.Command, args []string) {
 	regex, err := detections.NewRegexDetector(cfg.Regexp.Patterns)
 	logging.FinishSpinnerWithError(spnr, err)
 
-	spnr = logging.StartSpinner("retrieving image information")
-	i, err := image.NewImage(imageName, viper.GetBool("pull_image"))
+	spnr = logging.StartSpinner("connecting to docker daemon")
+	i, err := image.NewImage(imageName)
 	logging.FinishSpinnerWithError(spnr, err)
 
-	spnr = logging.StartSpinner("running regex detections")
-	found := regex.Run(i)
+	if viper.GetBool("pull_image") {
+		spnr = logging.StartSpinner("pulling image from remote")
+		err = i.Pull()
+		logging.FinishSpinnerWithError(spnr, err)
+	}
+
+	spnr = logging.StartSpinner("parsing environment variables")
+	envVars, err := i.ParseEnvVars()
+	logging.FinishSpinnerWithError(spnr, err)
+
+	spnr = logging.StartSpinner("parsing build arguments")
+	buildArgs, err := i.ParseBuildArguments()
+	logging.FinishSpinnerWithError(spnr, err)
+
+	var detect []detections.Detection
+
+	spnr = logging.StartSpinner("running regex detections on environment variables")
+	detect = append(detect, regex.EvalEnvVars(envVars)...)
+	logging.FinishSpinnerWithError(spnr, err)
+
+	spnr = logging.StartSpinner("running regex detections on build arguments")
+	detect = append(detect, regex.EvalBuildArgs(buildArgs)...)
 	logging.FinishSpinnerWithError(spnr, err)
 
 	spnr = logging.StartSpinner("running entropy detections")
@@ -42,7 +62,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	logging.FinishSpinner(spnr, "not implemented, skipping")
 
 	logging.Header("secrets found", logging.H1)
-	for _, d := range found {
+	for _, d := range detect {
 		logging.Msg("%s\n\n", d)
 	}
 }

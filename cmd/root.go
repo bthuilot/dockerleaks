@@ -28,6 +28,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("image", "i", "", "the name of the image")
 	_ = rootCmd.MarkFlagRequired("image")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "off", "log level (off, debug, info, warn, error, fatal)")
+	rootCmd.PersistentFlags().Bool("disable-color", false, "disable color use")
 	rootCmd.PersistentFlags().StringP("config", "c", "", "path to config file")
 	rootCmd.PersistentFlags().BoolP("pull", "p", false, "image should be pulled from remote")
 	// TODO(refine this)
@@ -36,15 +37,12 @@ func init() {
 	if err != nil {
 		log.Fatalf("err binding config %s", err)
 	}
-
-	//	rootCmd.SetHelpTemplate(`
-	//dockersecrets
-	//`)
 }
 
 func initLog() {
 	_ = viper.BindPFlag("log_level", rootCmd.PersistentFlags().Lookup("log-level"))
 	_ = viper.BindPFlag("pull_image", rootCmd.PersistentFlags().Lookup("pull"))
+	_ = viper.BindPFlag("disable_color", rootCmd.PersistentFlags().Lookup("disable-color"))
 }
 
 func Execute() {

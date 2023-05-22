@@ -1,21 +1,30 @@
 package image
 
 import (
-	"context"
 	"github.com/bthuilot/dockerleaks/internal/util"
-	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
+// runLineRegex is the regular expression to match a RUN line in
+// a Dockerfile
 var runLineRegex = regexp.MustCompile(`^(?:RUN )?\|(\d)+`)
+
+// shellLineRegex is the regular expression to match a SHELL line in
+// a Dockerfile
 var shellLineRegex = regexp.MustCompile(`SHELL\s+\[\s*"?([^]"])"?`)
+
+// argLineRegex is the regular expression to match a ARG line in
+// a Dockerfile
 var argLineRegex = regexp.MustCompile(`ARG\s+([A-Za-z0-9_\-]+)`)
 
-func parseBuildArgs(cli *client.Client, ctx context.Context, ref string) ([]BuildArg, error) {
-	history, err := cli.ImageHistory(ctx, ref)
+// ParseBuildArguments will parse out each build argument by inspecting
+// each response item in the docker images history, collecting the current set shell
+// and build arguments, to be able to parse out each build arguments value
+func (i image) ParseBuildArguments() ([]BuildArg, error) {
+	history, err := i.cli.ImageHistory(i.ctx, i.ref.String())
 	var (
 		envVars []BuildArg
 		args    []string

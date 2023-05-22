@@ -1,14 +1,15 @@
 package image
 
 import (
-	"context"
-	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
 	"strings"
 )
 
-func parseEnvVars(cli *client.Client, ctx context.Context, ref string) ([]EnvVar, error) {
-	imageInspect, _, err := cli.ImageInspectWithRaw(ctx, ref)
+// ParseEnvVars will parse out environment variables by
+// inspecting the image and pull out each environment
+// and split on the first '=' into the name and value
+func (i image) ParseEnvVars() ([]EnvVar, error) {
+	imageInspect, _, err := i.cli.ImageInspectWithRaw(i.ctx, i.ref.String())
 	if err != nil {
 		return nil, err
 	}

@@ -1,10 +1,10 @@
 files:
   disable: true
-  # Entropy to use for
-  secretEntropy: 2.3
-  paths:
-    - '**/.terraform'
+  folders:
+    - '.terraform'
+    - '.env'
   filenames:
+    - '*.tfstate'
     - '.env'
 
 entropy:
@@ -18,9 +18,9 @@ regexp:
       name: Twitter
     - pattern: 'EAACEdEose0cBA[0-9A-Za-z]+'
       name: Facebook
-    - pattern: '[ A-Za-z0-9 ]{ 125 } (counting letters [2])'
+    - pattern: '[A-Za-z0-9]{125}'
       name: Facebook
-    - pattern: '[ 0-9a-fA-F ]{ 7 }\.[0-9a-fA-F]{32}'
+    - pattern: '[0-9a-fA-F]{7}\.[0-9a-fA-F]{32}'
       name: Instagram
     - pattern: '(?:@)([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)'
       name: Instagram
