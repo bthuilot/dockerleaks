@@ -1,21 +1,25 @@
 # Dockerleaks
 
-Dockersecrets is a command-line tool designed to uncover secrets within Docker images.
-Secrets, which can include API keys, passwords, and access tokens, pose potential security risks if left exposed. 
-Dockersecrets will comb through Docker images to help identify these secrets.
+[![Go Report Card](https://goreportcard.com/badge/github.com/bthuilot/dockerleaks)](https://goreportcard.com/report/github.com/bthuilot/dockerleaks)
+[![License](https://img.shields.io/github/license/bthuilot/dockerleaks)](./LICENSE.md)
 
-With DockerSecrets, you can scan Docker images either located in a remote registry or stored locally.
+Dockerleaks is a command-line tool designed to uncover secrets within Docker images.
+Secrets, which can include API keys, passwords, and access tokens, pose potential security risks if left exposed. 
+Dockerleaks will comb through Docker images to help identify these secrets.
+
+You can scan Docker images either located in a remote registry or stored locally.
 It uses different methods to investigate environment variables and build arguments,
 which are common places where secrets might inadvertently be embedded during image creation.
 Furthermore, dockerSecrets can dig deep into the filesystem within a Docker image,
 scanning through files for potential secret leaks.
 
-By using Dockersecrets, you can ensure that your Docker images maintain their integrity,
+By using this tool, you can ensure that your Docker images maintain their integrity,
 adhering to the best practices of sensitive information management.
 It's a valuable addition to any security-conscious developer or organization's toolset,
 assisting in preventing unauthorized access to critical services, databases, and other resources.
 
-© 2023 Bryce Thuilot. DockerSecrets is an open-source project and comes with ABSOLUTELY NO WARRANTY. It is free software, and you are welcome to redistribute it under specific conditions.
+© 2023 Bryce Thuilot. Dockerleaks is an open-source project and comes with ABSOLUTELY NO WARRANTY.
+It is free software, and you are welcome to redistribute it under specific conditions.
 
 ## Usage
 
