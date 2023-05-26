@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/bthuilot/dockerleaks)](https://goreportcard.com/report/github.com/bthuilot/dockerleaks)
 [![License](https://img.shields.io/github/license/bthuilot/dockerleaks)](./LICENSE)
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/thuilot)
+
 
 Dockerleaks is a command-line tool designed to uncover secrets within Docker images.
 Secrets, which can include API keys, passwords, and access tokens, pose potential security risks if left exposed. 
@@ -68,3 +68,8 @@ dockerleaks -i my-image:latest -p
 ```
 
 This command would pull `my-image:latest` from its remote source and scan it for leaked secrets.
+
+
+## Support the project
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/thuilot)
