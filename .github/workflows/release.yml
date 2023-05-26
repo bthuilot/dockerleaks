@@ -25,3 +25,5 @@ jobs:
           ldflags: '-s'
           binary_name: "dockerleaks"
           extra_files: LICENSE README.md
+          md5sum: FALSE
+          sha256sum: TRUE
