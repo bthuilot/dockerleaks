@@ -18,6 +18,9 @@ type Detector interface {
 	EvalEnvVars([]image.EnvVar) []Detection
 
 	//EvalFileSystem(filesystem fs.FS) []Detection
+
+	// String returns the formatted name of the detector
+	String() string
 }
 
 // SecretSource represents the source of where the

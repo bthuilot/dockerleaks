@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/bthuilot/dockerleaks/pkg/detections"
 	"github.com/spf13/viper"
 )
 
@@ -17,7 +16,25 @@ type Config struct {
 type RegexpConfig struct {
 	// Patterns is the list of regular expressions
 	// patterns to search for
-	Patterns []detections.Pattern
+	Patterns []Pattern
+
+	// DisableDefaults will disable the default regular expressions
+	// from begin include in the regular expression detector. See full
+	// list for the detections.DefaultPatterns
+	DisableDefaults bool
+}
+
+// Pattern reprsents a user defined pattern for the Regexp Detector to
+// search for.
+type Pattern struct {
+	// Expression is a regular expression for matching a secret.
+	// must be compatible with [re2 syntax]
+	//
+	// [re2 syntax]: https://github.com/google/re2/wiki/Syntax
+	Expression string
+	// Name is a human-readable name of the secret the expression
+	// searches for (i.e. AWS Secret Key, OAuth token, etc.)
+	Name string
 }
 
 // EntropyConfig configuration for the string entropy detector
