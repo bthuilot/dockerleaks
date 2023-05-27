@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/bthuilot/dockerleaks/pkg/config"
+	"github.com/bthuilot/dockerleaks/internal/config"
 	"github.com/bthuilot/dockerleaks/pkg/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

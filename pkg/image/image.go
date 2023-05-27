@@ -49,6 +49,10 @@ func NewImage(name string) (Image, error) {
 		return nil, errors.New("invalid docker name")
 	}
 
+	if _, err = cli.Ping(ctx); err != nil {
+		return nil, errors.New("docker daemon is not running")
+	}
+
 	return image{
 		ref: ref,
 		cli: cli,

@@ -3,7 +3,7 @@ package logging
 import (
 	"fmt"
 	"github.com/briandowns/spinner"
-	"github.com/bthuilot/dockerleaks/pkg/config"
+	"github.com/bthuilot/dockerleaks/internal/config"
 	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 	"strings"

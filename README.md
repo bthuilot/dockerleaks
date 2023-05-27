@@ -3,7 +3,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/bthuilot/dockerleaks)](https://goreportcard.com/report/github.com/bthuilot/dockerleaks)
 [![License](https://img.shields.io/github/license/bthuilot/dockerleaks)](./LICENSE)
 
-
 Dockerleaks is a command-line tool designed to uncover secrets within Docker images.
 Secrets, which can include API keys, passwords, and access tokens, pose potential security risks if left exposed. 
 Dockerleaks will comb through Docker images to help identify these secrets.
@@ -22,8 +21,13 @@ assisting in preventing unauthorized access to critical services, databases, and
 © 2023 Bryce Thuilot. Dockerleaks is an open-source project and comes with ABSOLUTELY NO WARRANTY.
 It is free software, and you are welcome to redistribute it under specific conditions.
 
-
 ## Installation
+
+### via Homebrew
+
+```shell
+brew install bthuilot/tap/dockerleaks
+```
 
 ### via GitHub release
 
@@ -48,19 +52,17 @@ is shown below.
 docker run -it -v /var/run/docker.sock:/var/run/docker.sock thuilot/dockerleaks:latest -i [IMAGE TO SCAN] 
 ```
 
+## Configuration
+
+The application can be configured via a file named `dockerleaks.yml` located in the same directory the
+tool is run from, the directory `$HOME/.dockerleaks`, or the folder `/etc/dockerleaks`.
+
+Checkout the file [`dockerleaks.example.yml`](/dockerleaks.example.yml) located in the root of this
+repository for more information
 
 ## Usage
 
-To run DockerSecrets, use the following command:
-
-Here are the available flags:
-
-* `-c, --config string`: Path to the configuration file.
-* `-h, --help`: Show help for `dockerleaks`.
-* `-i, --image string`: The name of the Docker image to scan.
-* `-l, --log-level string`: Set the log level. Options are `off`, `debug`, `info`, `warn`, `error`, and `fatal`. The default is `off`.
-* `-p, --pull`: The image should be pulled from a remote source before scanning.
-
+The tool can be used to scan both remote and local built docker images.
 For example, to scan a remote image named `my-image`, you could use the following command:
 
 ```commandline
