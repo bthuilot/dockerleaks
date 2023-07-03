@@ -12,7 +12,6 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 COPY --from=build /build/dockerleaks /app/dockerleaks
-COPY dockerleaks.yml .
 
 LABEL authors="bryce@thuilot.io"
 LABEL repository="github.com/bthuilot/dockerleaks"

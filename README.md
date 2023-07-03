@@ -3,6 +3,9 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/bthuilot/dockerleaks)](https://goreportcard.com/report/github.com/bthuilot/dockerleaks)
 [![License](https://img.shields.io/github/license/bthuilot/dockerleaks)](./LICENSE)
 
+*NOTE*: This project is **heavily** inspired and apdated from [gitleaks](https://github.com/gitleaks/gitleaks)
+so be sure to check that out if you haven't already 
+
 Dockerleaks is a command-line tool designed to uncover secrets within Docker images.
 Secrets, which can include API keys, passwords, and access tokens, pose potential security risks if left exposed. 
 Dockerleaks will comb through Docker images to help identify these secrets.
