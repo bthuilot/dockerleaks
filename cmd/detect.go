@@ -61,7 +61,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if !cfg.Layer.Disable {
 		spnr = logging.StartSpinner("checking layers for secrets")
 		detector := layers.NewDetector(i).WithRules(rules...)
-		if !cfg.ExcludeDefaultRule {
+		if !cfg.ExcludeDefaultRules {
 			detector = detector.UseDefaultRules()
 		}
 		secretStringsDetected, err = detector.Detect()

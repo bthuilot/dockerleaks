@@ -43,7 +43,7 @@ func (d Detector) Detect() (detections []common.SecretString, err error) {
 	)
 	// Check Build Args
 	if buildArgs, err = d.img.ParseBuildArguments(); err != nil {
-		logrus.Error("unable to parse build arguments: %s", err)
+		logrus.Errorf("unable to parse build arguments: %s", err)
 		return nil, fmt.Errorf("an unknown error occurred while parsing build arguments")
 	}
 	for _, v := range buildArgs {
@@ -65,7 +65,7 @@ func (d Detector) Detect() (detections []common.SecretString, err error) {
 
 	// Check Build Args
 	if envVars, err = d.img.ParseEnvVars(); err != nil {
-		logrus.Error("unable to parse build arguments: %s", err)
+		logrus.Errorf("unable to parse build arguments: %s", err)
 		return nil, fmt.Errorf("an unknown error occurred while parsing environment variables")
 	}
 	for _, v := range envVars {
