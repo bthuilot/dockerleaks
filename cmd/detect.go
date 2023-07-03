@@ -4,109 +4,83 @@ import (
 	"fmt"
 	"github.com/briandowns/spinner"
 	"github.com/bthuilot/dockerleaks/internal/config"
-	"github.com/bthuilot/dockerleaks/pkg/detections"
+	"github.com/bthuilot/dockerleaks/pkg/common"
 	"github.com/bthuilot/dockerleaks/pkg/image"
+	"github.com/bthuilot/dockerleaks/pkg/layers"
 	"github.com/bthuilot/dockerleaks/pkg/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"regexp"
 )
 
 // TODO(make sub-command?)
 
-func constructRegexDetector(cfg config.Config) (detections.Detector, error) {
-	var patterns []detections.Pattern
-	for _, p := range cfg.Regexp.Patterns {
-		regex, err := regexp.Compile(p.Expression)
-		if err != nil {
-			logrus.Errorf(
-				"unable to parse regular expression %s `%s`: %s",
-				p.Name, p.Expression, err,
-			)
-			continue
-		}
-		patterns = append(patterns, detections.Pattern{
-			RegExp: regex,
-			Name:   p.Name,
-		})
-	}
-
-	if !cfg.Regexp.DisableDefaults {
-		patterns = append(patterns, detections.DefaultPatterns...)
-	}
-
-	return detections.NewRegexDetector(patterns)
-}
-
 func runDetect(cmd *cobra.Command, args []string) {
 	var (
-		cfg      config.Config
-		spnr     *spinner.Spinner
-		detected []detections.Detection
+		cfg                   config.File
+		spnr                  *spinner.Spinner
+		secretStringsDetected []common.SecretString
 	)
-	if err := viper.Unmarshal(&cfg); err != nil {
-		logging.Fatal(err)
-	}
 
+	// Parse image name from CLI argss
 	imageName, err := cmd.Flags().GetString("image")
 	if err != nil {
 		_ = cmd.Help()
 		logging.Fatal("you must supply the image to pull")
 	}
 
-	spnr = logging.StartSpinner("parsing configurations")
-	logrus.Infof("parsing regular expression detection configuration")
-	regexDetector, err := constructRegexDetector(cfg)
-	if err != nil {
-		logging.FinishSpinnerWithError(spnr, err)
+	// Parse the configuration file and user supplied rules
+	spnr = logging.StartSpinner("parsing configuration")
+	if err = viper.Unmarshal(&cfg); err != nil {
+		logging.Fatal(err)
 	}
 
-	logrus.Infof("parsing entropy detection configuration")
-	// TODO(entropy detector)
-	logrus.Infof("parsing file detection configuration")
-	// TODO(file detector)
+	logrus.Infof("parsing regular expression detection configuration")
+	rules, invalidRules := config.ParseRules(cfg.Rules)
+	logging.FinishSpinnerWithError(spnr, err)
+	if len(invalidRules) > 0 && viper.GetBool("ignore-invalid") {
+		for _, iR := range invalidRules {
+			logrus.Debugf("invalid pattern '%s'", iR.Pattern)
+		}
+		logging.Msg("%d invalid rules found, ignoring due to flag `ignore-invalid`", len(invalidRules))
+	}
 
+	// Connect to docker daemon and pull image if necessary
 	spnr = logging.StartSpinner("connecting to docker daemon")
 	i, err := image.NewImage(imageName)
 	logging.FinishSpinnerWithError(spnr, err)
 
+	// TODO(refactor to be part of constructing)
 	if viper.GetBool("pull_image") {
 		spnr = logging.StartSpinner("pulling image from remote")
 		err = i.Pull()
 		logging.FinishSpinnerWithError(spnr, err)
 	}
 
-	spnr = logging.StartSpinner("parsing environment variables")
-	envVars, err := i.ParseEnvVars()
-	logging.FinishSpinnerWithError(spnr, err)
-
-	spnr = logging.StartSpinner("parsing build arguments")
-	buildArgs, err := i.ParseBuildArguments()
-	logging.FinishSpinnerWithError(spnr, err)
-
-	for _, d := range []detections.Detector{
-		regexDetector,
-	} {
-		spnr = logging.StartSpinner(
-			fmt.Sprintf("running detection '%s' on environment variables", d),
-		)
-		detected = append(detected, d.EvalEnvVars(envVars)...)
-		logging.FinishSpinnerWithError(spnr, err)
-
-		spnr = logging.StartSpinner(
-			fmt.Sprintf("running detection '%s' on build arguments", d),
-		)
-		detected = append(detected, d.EvalBuildArgs(buildArgs)...)
+	// If checking layers are enabled, run layer detector
+	if !cfg.Layer.Disable {
+		spnr = logging.StartSpinner("checking layers for secrets")
+		detector := layers.NewDetector(i).WithRules(rules...)
+		if !cfg.ExcludeDefaultRules {
+			detector = detector.UseDefaultRules()
+		}
+		secretStringsDetected, err = detector.Detect()
 		logging.FinishSpinnerWithError(spnr, err)
 	}
 
-	if len(detected) == 0 {
-		logging.Header("no secrets found", logging.H1)
+	// If checking filesystem are enabled, run filesystem detector
+	if !cfg.Filesystem.Disable {
+		spnr = logging.StartSpinner("checking filesystem for secrets")
+		err = fmt.Errorf("not impleted yet")
+		logging.FinishSpinnerWithError(spnr, err)
+	}
+
+	if len(secretStringsDetected) == 0 {
+		logging.Header("no secret strings found", logging.H1)
 	} else {
 		logging.Header("secrets found", logging.H1)
-		for _, d := range detected {
-			logging.Msg("%s\n\n", d)
+		for _, s := range secretStringsDetected {
+			logging.Msg("%s\n\n", s)
 		}
 	}
 }

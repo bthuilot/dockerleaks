@@ -1,27 +1,29 @@
-files:
-  # whether to disable the search for files
-  disable: true
-  # A list of folder names to search for
-  # (wildcard is allowed)
-  folders:
+# Disbales the use of the default rules.
+# see [/pkg/common/rules.go]
+excludeDefaultRules: false
+
+# User defined rules for secret strings
+rules:
+  - name: Test # [REQUIRED]: Human readble name of the rule
+    pattern: 'MY_COMPANY_[A-Za-z0-9!&*$@]{45}' # [REQUIRED]: Regular expression to match
+    entropy: 1.0 # [OPTIONAL]: Minimum entropy of the string
+  - name: "AWS Acces Key"
+    regex: 'A[KS]IA[A-V0-9]+'
+    entropy: 3.4
+
+# Layer checking configuration
+layers:
+  disable: false # disables the script from checking each layer
+
+# files is the configuration for secret searches
+# within files
+filesystem:
+  disable: true  # whether to disable the search for files
+  # inorder to check files of a docker image, you need
+  # to start a running container, which may not be possible
+  # for all environments
+  folders: # list of folder names to search for (wildcard is allowed)
     - '.terraform'
+  files: # List of file names to search for (wildcard is allowed)
+    - 'terraform.tfstate'
     - '.env'
-  # A list of file names to search for
-  # (wildcard is allowed)
-  filenames:
-    - '*.tfstate'
-    - '.env'
-
-entropy:
-  # The threshold for entropy scans
-  threshold: 2.3
-
-regexp:
-  # Whether to disable the default configuration,
-  # See the variable `DefaultPatterns` in /pkd/detections/regex.go for the full
-  # list of defaults
-  disableDefaults: false
-  # A list of custom patterns to search for
-  patterns:
-    - pattern: 'MY_COMPANY_[A-Za-z0-9!&*$@]{45}'
-      name: Custom Token
