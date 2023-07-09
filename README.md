@@ -52,7 +52,7 @@ the docker socket into the container such that the binary can connect to the dae
 is shown below.
 
 ```shell
-docker run -it -v /var/run/docker.sock:/var/run/docker.sock thuilot/dockerleaks:latest -i [IMAGE TO SCAN] 
+docker run -it -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/bthuilot/dockerleaks:[LATEST VERSION] -i [IMAGE TO SCAN] 
 ```
 
 ## Configuration
