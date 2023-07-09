@@ -26,8 +26,10 @@ type SecretStringMatch struct {
 // the list of SecretStringRules provided
 func FindRuleMatches(content string, rules []SecretStringRule) (matches []SecretStringMatch) {
 	for _, r := range rules {
-		// TODO(entropy)
 		for _, m := range r.Pattern.FindStringSubmatch(content) {
+			if CalculateShannonEntropy(m) < r.Entropy {
+				continue
+			}
 			matches = append(matches, SecretStringMatch{
 				Rule:  r,
 				Value: m,

@@ -10,6 +10,8 @@ RUN GOOS=linux go build -ldflags "-s -w" -o /build/dockerleaks .
 
 FROM debian:bookworm-slim
 
+RUN apt update && apt install -y ca-certificates && update-ca-certificates
+
 WORKDIR /app
 COPY --from=build /build/dockerleaks /app/dockerleaks
 
