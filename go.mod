@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/docker/distribution v2.8.2+incompatible
-	github.com/docker/docker v23.0.6+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/fatih/color v1.15.0
 	github.com/sirupsen/logrus v1.9.2
 	github.com/spf13/cobra v1.7.0
