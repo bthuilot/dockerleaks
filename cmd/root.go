@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/bthuilot/dockerleaks/cmd/analyze"
 	"github.com/bthuilot/dockerleaks/internal/config"
 	"github.com/bthuilot/dockerleaks/pkg/logging"
 	"github.com/spf13/cobra"
@@ -18,35 +19,47 @@ Copyright (C) 2023 Bryce Thuilot.
 This program comes with ABSOLUTELY NO WARRANTY; This is free software,
 and you are welcome to redistribute it under certain conditions.
 `,
-	Run: runDetect,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return config.Init()
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := cmd.Help(); err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringP("image", "i", "", "the name of the image")
-	_ = rootCmd.MarkFlagRequired("image")
+	cobra.OnInitialize(func() {
+		bindFlags()
+		if err := config.Init(); err != nil {
+			logging.Fatal("error initializing config: %s", err)
+		}
+	})
+
 	rootCmd.PersistentFlags().StringP("log-level", "l", "off", "log level (off, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().Bool("disable-color", false, "disable color use")
-	rootCmd.PersistentFlags().StringP("config", "c", "", "path to config file")
-	rootCmd.PersistentFlags().BoolP("pull", "p", false, "image should be pulled from remote")
-	// TODO(refine this)
-	cobra.OnInitialize(initLog)
-	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
-	if err != nil {
+	rootCmd.PersistentFlags().StringP("config", "c", "./", "path to config file")
+	rootCmd.PersistentFlags().BoolP("unmask", "u", false, "secret values should be unmasked")
+
+	rootCmd.AddCommand(analyze.Command)
+	if err := rootCmd.MarkPersistentFlagFilename("config", "yaml", "yml"); err != nil {
+		log.Fatalf("err marking config as filename %s", err)
+	}
+
+	if err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config")); err != nil {
 		log.Fatalf("err binding config %s", err)
 	}
+
 }
 
-func initLog() {
-	_ = viper.BindPFlag("log_level", rootCmd.PersistentFlags().Lookup("log-level"))
-	_ = viper.BindPFlag("pull_image", rootCmd.PersistentFlags().Lookup("pull"))
-	_ = viper.BindPFlag("disable_color", rootCmd.PersistentFlags().Lookup("disable-color"))
+func bindFlags() {
+	_ = viper.BindPFlag(config.ViperLogLevelKey, rootCmd.PersistentFlags().Lookup("log-level"))
+	_ = viper.BindPFlag(config.ViperDisableColorKey, rootCmd.PersistentFlags().Lookup("disable-color"))
+	if err := viper.BindPFlag(config.ViperUnmaskKey, rootCmd.PersistentFlags().Lookup("unmask")); err != nil {
+		log.Fatalf("err binding reveal %s", err)
+	}
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logging.Fatal(err)
+		logging.Fatal(err.Error())
 	}
 }

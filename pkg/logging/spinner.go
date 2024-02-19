@@ -5,16 +5,15 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/bthuilot/dockerleaks/internal/config"
 	"github.com/fatih/color"
-	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
 
 func StartSpinner(msg string) (spnr *spinner.Spinner) {
 	spnr = spinner.New(spinner.CharSets[69], time.Second/10)
-	spnr.Prefix = fmt.Sprintf("%s ", msg)
+	spnr.Prefix = fmt.Sprintf("%s %s ", grayText("=>"), msg)
 	if !config.ShouldUseSpinner() {
-		logrus.Info(msg)
+		Msg(spnr.Prefix)
 		return
 	}
 	spnr.Start()
@@ -23,13 +22,13 @@ func StartSpinner(msg string) (spnr *spinner.Spinner) {
 
 func FinishSpinner(spnr *spinner.Spinner, finalMsg string) {
 	if spnr == nil {
-		logrus.Info(finalMsg)
+		Msg(finalMsg)
 		return
 	}
 	msg := strings.TrimSpace(spnr.Prefix)
 	spnr.FinalMSG = fmt.Sprintf("%s %s\n", msg, finalMsg)
 	if !config.ShouldUseSpinner() {
-		logrus.Info(spnr.FinalMSG)
+		Msg(finalMsg)
 	}
 	spnr.Stop()
 }
@@ -48,6 +47,13 @@ func successText(text string) string {
 	return text
 }
 
+func grayText(text string) string {
+	if config.ShouldUseColor() {
+		return color.New(color.FgHiBlack).SprintFunc()(text)
+	}
+	return text
+}
+
 func FinishSpinnerWithError(spnr *spinner.Spinner, err error) {
 	result := successText("complete")
 	if err != nil {
@@ -55,6 +61,6 @@ func FinishSpinnerWithError(spnr *spinner.Spinner, err error) {
 	}
 	FinishSpinner(spnr, result)
 	if err != nil {
-		Fatal(err)
+		Fatal("%s: %s", errorText("ERROR"), err.Error())
 	}
 }

@@ -1,6 +1,7 @@
 package image
 
 import (
+	"github.com/bthuilot/dockerleaks/internal/util"
 	"github.com/sirupsen/logrus"
 	"strings"
 )
@@ -26,5 +27,21 @@ func (i image) ParseEnvVars() ([]EnvVar, error) {
 			Location: env,
 		})
 	}
-	return vars, nil
+	return uniqueEnvVars(vars), nil
+}
+
+func uniqueEnvVars(envVars []EnvVar) (unique []EnvVar) {
+	uniqueVars := make(map[string][]string)
+	for _, v := range envVars {
+		if _, ok := uniqueVars[v.Name]; !ok {
+			uniqueVars[v.Name] = []string{v.Value}
+			unique = append(unique, v)
+		} else if !util.Any(uniqueVars[v.Name], func(s string) bool {
+			return s == v.Value
+		}) {
+			uniqueVars[v.Name] = append(uniqueVars[v.Name], v.Value)
+			unique = append(unique, v)
+		}
+	}
+	return unique
 }

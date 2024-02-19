@@ -1,38 +1,68 @@
-package common
+package secrets
 
-import "regexp"
+import (
+	"fmt"
+	"github.com/bthuilot/dockerleaks/internal/config"
+	"github.com/sirupsen/logrus"
+	"regexp"
+	"strings"
+)
 
-// SecretStringRule represents a pattern and entropy rule for matching
+// Rule represents a pattern and entropy rule for matching
 // secret string
-type SecretStringRule struct {
+type Rule struct {
 	// Name is the human-readable name secret that this
 	// rule detects
-	Name string
+	Name string `json:"name"`
 	// Pattern is the regular expression to match this secret
-	Pattern *regexp.Regexp
-	// Entropy is the minimum entropy the string must be
-	Entropy float64
+	Pattern *regexp.Regexp `json:"pattern"`
+	// MinEntropy is the minimum entropy the string must be
+	MinEntropy float64 `json:"min_entropy,omitempty"`
 }
 
-// SecretStringMatch represents a match of string that is detected to be a secret value
-type SecretStringMatch struct {
+func (r Rule) String() string {
+	var conditions []string
+	if r.Pattern != nil {
+		conditions = append(conditions, fmt.Sprintf("regex '%s'", r.Pattern))
+	}
+	if r.MinEntropy > 0 {
+		conditions = append(conditions, fmt.Sprintf("minimum entropy of %f", r.MinEntropy))
+	}
+	if len(conditions) > 0 {
+		return fmt.Sprintf("'%s' via %s", r.Name, strings.Join(conditions, " and "))
+	}
+	return fmt.Sprintf("'%s'", r.Name)
+}
+
+// Match represents a match of string that is detected to be a secret value
+type Match struct {
 	// Rule is the rule that matches this string
-	Rule SecretStringRule
-	// Value is the actual value of the string
-	Value string
+	Rule Rule
+	// Secret is the actual value of the string
+	Secret Secret
+	// FullText is the full text that was searches
+	FullText string
+	// StartPos is the starting position of the match
+	StartPos int
+	// EndPos is the ending position of the match
+	EndPos int
 }
 
-// FindRuleMatches will search a string's content for for any matches to
+// findRuleMatches will search a string's content for any matches to
 // the list of SecretStringRules provided
-func FindRuleMatches(content string, rules []SecretStringRule) (matches []SecretStringMatch) {
+func findRuleMatches(content string, rules []Rule) (matches []Match, err error) {
 	for _, r := range rules {
-		for _, m := range r.Pattern.FindStringSubmatch(content) {
-			if CalculateShannonEntropy(m) < r.Entropy {
+		for _, s := range r.Pattern.FindStringSubmatch(content) {
+			entropy := CalculateShannonEntropy(s)
+			if entropy < r.MinEntropy {
 				continue
 			}
-			matches = append(matches, SecretStringMatch{
-				Rule:  r,
-				Value: m,
+			matches = append(matches, Match{
+				Rule: r,
+				Secret: Secret{
+					Value:   s,
+					Entropy: entropy,
+				},
 			})
 		}
 	}
@@ -42,8 +72,8 @@ func FindRuleMatches(content string, rules []SecretStringRule) (matches []Secret
 // DefaultRules is the default list of rules
 // this list contains rules to match a common
 // set of secrets
-// TODO(entropy for default detections)
-var DefaultRules = []SecretStringRule{
+// TODO(improve this list)
+var DefaultRules = []Rule{
 	{
 		Pattern: regexp.MustCompile(`[1-9][0-9]+-[0-9a-zA-Z]{40}`),
 		Name:    "Twitter",
@@ -165,4 +195,25 @@ var DefaultRules = []SecretStringRule{
 		Pattern: regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`),
 		Name:    "Heroku",
 	},
+}
+
+// ParseRules will parse a list of UserRule patterns into regexp.Regexp and a common.SecretStringRule.
+// All rules that result in error are returned in the second variables
+func ParseRules(userRules []config.UserRule) (rules []Rule, errors []config.UserRule) {
+	for _, r := range userRules {
+		regex, err := regexp.Compile(r.Pattern)
+		if err != nil {
+			logrus.Errorf(
+				"unable to parse regular expression %s `%s`: %s",
+				r.Name, r.Pattern, err,
+			)
+			errors = append(errors, r)
+		}
+		rules = append(rules, Rule{
+			Pattern:    regex,
+			Name:       r.Name,
+			MinEntropy: r.MinEntropy,
+		})
+	}
+	return
 }

@@ -21,3 +21,20 @@ func ZipApply[A, B, C any](f func(a A, b B) C, as []A, bs []B) []C {
 	}
 	return cs
 }
+
+func Apply[A, B any](as []A, f func(a A) B) []B {
+	bs := make([]B, len(as))
+	for i, a := range as {
+		bs[i] = f(a)
+	}
+	return bs
+}
+
+func Any[X any](xs []X, f func(X) bool) bool {
+	for _, x := range xs {
+		if f(x) {
+			return true
+		}
+	}
+	return false
+}
