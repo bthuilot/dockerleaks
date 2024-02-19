@@ -29,7 +29,7 @@ func Header(text string, s HeaderSize) {
 func h1Display(text string) string {
 	header := fmt.Sprintf("# %s #", text)
 	return fmt.Sprintf(
-		"\n%s\n%s\n%s\n\n",
+		"\n%s\n%s\n%s",
 		strings.Repeat("#", len(header)),
 		header,
 		strings.Repeat("#", len(header)),

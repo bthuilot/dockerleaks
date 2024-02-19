@@ -21,6 +21,9 @@ type Image interface {
 	// Pull will pull down an image from remote
 	Pull() error
 	//ParseFS() (fs.FS, error)
+
+	// StartContainer will start a container from this image
+	StartContainer() (Container, error)
 }
 
 // image is the concrete implementation of the Image interface

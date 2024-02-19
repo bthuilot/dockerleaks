@@ -46,7 +46,7 @@ func initLogger(level LoggingLevel) {
 
 // ShouldUseSpinner will return true if the "stylized"
 func ShouldUseSpinner() bool {
-	return !viper.IsSet("log_level") || strings.ToUpper(viper.GetString("log_level")) == "OFF"
+	return !viper.IsSet(ViperLogLevelKey) || strings.ToUpper(viper.GetString(ViperLogLevelKey)) == "OFF"
 }
 
 // ShouldUseColor will return true, if colored output should be used

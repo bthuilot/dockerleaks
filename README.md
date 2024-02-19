@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/bthuilot/dockerleaks)](https://goreportcard.com/report/github.com/bthuilot/dockerleaks)
 [![License](https://img.shields.io/github/license/bthuilot/dockerleaks)](./LICENSE)
 
-*NOTE*: This project is **heavily** inspired and apdated from [gitleaks](https://github.com/gitleaks/gitleaks)
+*NOTE*: This project is **heavily** inspired and adapted from [gitleaks](https://github.com/gitleaks/gitleaks)
 so be sure to check that out if you haven't already 
 
 Dockerleaks is a command-line tool designed to uncover secrets within Docker images.
@@ -52,27 +52,29 @@ the docker socket into the container such that the binary can connect to the dae
 is shown below.
 
 ```shell
-docker run -it -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/bthuilot/dockerleaks:[LATEST VERSION] -i [IMAGE TO SCAN] 
+docker run -it -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/bthuilot/dockerleaks:[LATEST VERSION] analyze --static -p -i [IMAGE TO SCAN] 
 ```
 
+## Usage
+
+The tool can be used to scan both remote and local built docker images.
+For example, to static analyze a remote image named `my-image`, you could use the following command:
+
+```commandline
+dockerleaks analyze static -i my-image:latest -p
+```
+
+This command would pull `my-image:latest` from its remote source and scan it for leaked secrets.
+
+
 ## Configuration
+
 
 The application can be configured via a file named `dockerleaks.yml` located in the same directory the
 tool is run from, the directory `$HOME/.dockerleaks`, or the folder `/etc/dockerleaks`.
 
 Checkout the file [`dockerleaks.example.yml`](/dockerleaks.example.yml) located in the root of this
 repository for more information
-
-## Usage
-
-The tool can be used to scan both remote and local built docker images.
-For example, to scan a remote image named `my-image`, you could use the following command:
-
-```commandline
-dockerleaks -i my-image:latest -p
-```
-
-This command would pull `my-image:latest` from its remote source and scan it for leaked secrets.
 
 
 ## Support the project
