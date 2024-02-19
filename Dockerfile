@@ -18,7 +18,7 @@ RUN apt update && apt install -y ca-certificates && update-ca-certificates
 WORKDIR /app
 
 COPY  --from=build  /build/dockerleaks /app/dockerleaks
-COPY  dockerleaks.yml /app/dockerleaks.yml
+#COPY  dockerleaks.yml /app/dockerleaks.yml
 
 ARG VERSION="+unknown"
 

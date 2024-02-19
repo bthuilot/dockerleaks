@@ -52,7 +52,7 @@ the docker socket into the container such that the binary can connect to the dae
 is shown below.
 
 ```shell
-docker run -it -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/bthuilot/dockerleaks:[LATEST VERSION] analyze static -p -i [IMAGE TO SCAN] 
+docker run -it -v /var/run/docker.sock:/var/run/docker.sock -v ./dockerleaks.yml:/app/dockerleaks.yml ghcr.io/bthuilot/dockerleaks:[LATEST VERSION] analyze static -p -i [IMAGE TO SCAN] 
 ```
 
 ## Usage
