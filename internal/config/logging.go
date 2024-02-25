@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -28,6 +29,7 @@ const (
 // initLogger will initialize the logging configuration of the application
 // and set the logging level to the given LoggingLevel. Defaults to Off
 func initLogger(level LoggingLevel) {
+	logrus.SetOutput(os.Stderr)
 	switch strings.ToUpper(level) {
 	case Debug:
 		logrus.SetLevel(logrus.DebugLevel)

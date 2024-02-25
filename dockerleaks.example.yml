@@ -1,15 +1,30 @@
-# Disables the use of the default rules.
-# see [/pkg/secrets/rules.go]
-excludeDefaultRules: false
+# General configuration
+logLevel: debug # [OPTIONAL]: Log level, default: off options: off, error, warn, info, debug
 
-# User defined rules for secret strings
-rules:
+# Disables the use of the default static  rules.
+# see [/pkg/secrets/rules.go]
+excludeDefaultStaticRules: false
+# Rules for static scanning of images
+staticRules:
   - name: MyCompany API Key # [REQUIRED]: Human readable name of the rule
     pattern: 'MY_COMPANY_[A-Za-z0-9!&*$@]{45}' # [REQUIRED]: Regular expression to match
-  - name: "Geneirc API Key"
+  - name: "Generic API Key"
     pattern: '[A-Za-z0-9!&*$@]{45,}'
     minEntropy: 2.0 # [OPTIONAL]: Minimum entropy of the string
 
+# Disables the use of the default dynamic  rules.
+# see [/pkg/secrets/rules.go]
+excludeDefaultDynamicRules: false
+# Rules for dynamic scanning of images
+dynamicRules:
+  - name: "git folder" # [REQUIRED]: Human readable name of the rule
+    filePattern: '^(.*/)*\.git$' # [OPTIONAL]: Regular expression to match file paths (if not provided, it will match all files)
+  - name: "Specific file and regex"
+    filePattern: '^(.*/)*[-\w._]+\.json$'
+    # [OPTIONAL]: Regular expression to match the content of the file
+    # (if not provided, it will match for any file that matches the file pattern)
+    pattern: 'MY_COMPANY_[A-Za-z0-9!&*$@]+'
+
 # Optional Configurations
 unmaskValues: true # [OPTIONAL]: Unmask values in the output, default: true
-outputFormat: json # [OPTIONAL]: Output format, default: string
+outputFormat: json # [OPTIONAL]: Output format, default: text

@@ -1,61 +1,21 @@
 package image
 
 import (
-	"context"
 	"errors"
 	"fmt"
+	"github.com/bthuilot/dockerleaks/pkg/image/container"
+	"github.com/docker/distribution/uuid"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	containerTypes "github.com/docker/docker/api/types/container"
 	"github.com/sirupsen/logrus"
-	"io"
 )
 
-type Container interface {
-	// Stop will stop the container
-	Stop() error
-	// RunCommand will run a command in the container and return the output
-	RunCommand(cmd string) (string, error)
-}
-
-type c struct {
-	id  string
-	cli *client.Client
-	ctx context.Context
-}
-
-func (c c) RunCommand(cmd string) (string, error) {
-	// exec command
-	exec, err := c.cli.ContainerExecCreate(c.ctx, c.id, types.ExecConfig{
-		Cmd: []string{"sh", "-c", cmd},
-	})
-	if err != nil {
-		return "", err
-	}
-	// pull output
-	resp, err := c.cli.ContainerExecAttach(c.ctx, exec.ID, types.ExecStartCheck{})
-	if err != nil {
-		return "", err
-	}
-	defer resp.Close()
-	// read output
-	output, err := io.ReadAll(resp.Reader)
-	return string(output), err
-}
-
-func (c c) Stop() error {
-	if err := c.cli.ContainerStop(c.ctx, c.id, container.StopOptions{}); err != nil {
-		logrus.Errorf("failure stopping container: %s", err)
-		return errors.New("unable to stop container")
-	}
-	return nil
-}
-
-func (i image) StartContainer() (Container, error) {
+func (i image) CreateContainer() (container.Container, error) {
 	// create container
-	resp, err := i.cli.ContainerCreate(i.ctx, &container.Config{
+	name := fmt.Sprintf("dockerleaks-scan-%s", uuid.Generate())
+	resp, err := i.cli.ContainerCreate(i.ctx, &containerTypes.Config{
 		Image: i.ref.String(),
-	}, nil, nil, nil, fmt.Sprintf("dockerleaks-scan-%s", i.ref.String()))
+	}, nil, nil, nil, name)
 	if err != nil {
 		logrus.Errorf("failure creating container: %s", err)
 		return nil, errors.New("unable to create container")
@@ -67,7 +27,24 @@ func (i image) StartContainer() (Container, error) {
 		return nil, errors.New("unable to start container")
 	}
 
-	return c{
-		id: resp.ID,
-	}, nil
+	return container.New(
+		resp.ID,
+		name,
+		i.cli,
+		i.ctx,
+	)
+}
+
+func (i image) DestroyContainer(c container.Container) error {
+	if err := c.Stop(); err != nil {
+		logrus.Errorf("failure stopping container: %s", err)
+		return err
+	}
+
+	if err := i.cli.ContainerRemove(i.ctx, c.ID(), types.ContainerRemoveOptions{}); err != nil {
+		logrus.Errorf("failure removing container: %s", err)
+		return errors.New("unable to remove container")
+	}
+
+	return nil
 }

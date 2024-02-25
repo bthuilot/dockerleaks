@@ -20,7 +20,7 @@ func Header(text string, s HeaderSize) {
 	case H1:
 		header = h1Display(text)
 	default:
-		logrus.Error("invalid header size given, displaying default")
+		logrus.Warn("invalid header size given, displaying default")
 		header = fmt.Sprintf("# %s", header)
 	}
 	Msg(header)
@@ -29,7 +29,7 @@ func Header(text string, s HeaderSize) {
 func h1Display(text string) string {
 	header := fmt.Sprintf("# %s #", text)
 	return fmt.Sprintf(
-		"\n%s\n%s\n%s",
+		"\n%s\n%s\n%s\n",
 		strings.Repeat("#", len(header)),
 		header,
 		strings.Repeat("#", len(header)),

@@ -9,22 +9,32 @@ const (
 	ViperUnmaskKey       = "unmaskValues"
 	ViperExcludeKey      = "excludeDefaultRules"
 	ViperDisableColorKey = "disableColor"
-	ViperPullImageKey    = "pullImage"
 )
 
 // File is the user configuration file for the application
 type File struct {
-	// Rules is the list of user defined rules for matching secret strings
-	Rules []UserRule
-	// ExcludeDefaultRules will disable the default Patterns for detecting
-	// secret strings2. See the variable [common.DefaultRules] for the full
+	// StaticRules is the list of user defined rules for matching secret strings
+	// during a static image analysis
+	StaticRules []UserStaticRule
+	// DynamicRules is the list of user defined rules for matching secret strings
+	// during a dynamic container analysis
+	DynamicRules []UserDynamicRule
+	// IgnoreInvalidRules will ignore any invalid rules in the configuration
+	// file if set to true
+	IgnoreInvalidRules bool
+	// ExcludeDefaultStaticRules will disable the default Patterns for detecting
+	// secret strings during a static scan. See the variable [secrets.DefaultStaticRules] for the full
 	// list of defaults
-	ExcludeDefaultRules bool
+	ExcludeDefaultStaticRules bool
+	// ExcludeDefaultDynamicRules will disable the default rules for detecting
+	// secret strings or files during a dynamic scan. See the variable [secrets.DefaultDynamicRules] for the full
+	// list of defaults
+	ExcludeDefaultDynamicRules bool
 }
 
-// UserRule represents a user defined string pattern/entropy
+// UserStaticRule represents a user defined string pattern/entropy
 // for the layer and filesystem detectors to search
-type UserRule struct {
+type UserStaticRule struct {
 	// Pattern is a regular expression for matching a secret.
 	// must be compatible with [re2 syntax]
 	//
@@ -33,6 +43,21 @@ type UserRule struct {
 	// Name is a human-readable name of the secret the expression
 	// searches for (i.e. AWS SecretString Key, OAuth token, etc.)
 	Name string
+	// MinEntropy is the minimum entropy the string should have
+	MinEntropy float64
+}
+
+type UserDynamicRule struct {
+	// Name is a human-readable name of the secret the expression
+	// searches for (i.e. .env files, tfstate , etc.)
+	Name string
+	// FilePattern is a regular expression for matching files to search
+	// a nil value means that the rule will match all files
+	FilePattern string
+	// Pattern is a regular expression for matching text in the file
+	// a nil value means that the rule will return true if only the file is matched
+	// (matching all the file)
+	Pattern string
 	// MinEntropy is the minimum entropy the string should have
 	MinEntropy float64
 }

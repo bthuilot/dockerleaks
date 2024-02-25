@@ -8,9 +8,14 @@ import (
 	"strings"
 )
 
-// Rule represents a pattern and entropy rule for matching
-// secret string
-type Rule struct {
+// Rule represents a rule for matching secret strings
+type Rule interface {
+	String() string
+}
+
+// StaticRule represents a pattern and entropy rule for matching
+// secret string in a static context
+type StaticRule struct {
 	// Name is the human-readable name secret that this
 	// rule detects
 	Name string `json:"name"`
@@ -20,7 +25,7 @@ type Rule struct {
 	MinEntropy float64 `json:"min_entropy,omitempty"`
 }
 
-func (r Rule) String() string {
+func (r StaticRule) String() string {
 	var conditions []string
 	if r.Pattern != nil {
 		conditions = append(conditions, fmt.Sprintf("regex '%s'", r.Pattern))
@@ -34,46 +39,45 @@ func (r Rule) String() string {
 	return fmt.Sprintf("'%s'", r.Name)
 }
 
-// Match represents a match of string that is detected to be a secret value
-type Match struct {
-	// Rule is the rule that matches this string
-	Rule Rule
-	// Secret is the actual value of the string
-	Secret Secret
-	// FullText is the full text that was searches
-	FullText string
-	// StartPos is the starting position of the match
-	StartPos int
-	// EndPos is the ending position of the match
-	EndPos int
+type DynamicRule struct {
+	// Name is the human-readable name secret that this
+	// rule detects
+	Name string `json:"name"`
+	// FilePattern is the regular expression to match the files to search
+	// a nil value means that the rule will match all files
+	FilePattern *regexp.Regexp `json:"file_pattern,omitempty"`
+	// Pattern is the regular expression to match text in the file
+	// a nil value means that the rule will return true if only the file is matched
+	// (matching all the file)
+	Pattern *regexp.Regexp `json:"pattern,omitempty"`
+	// MinEntropy is the minimum entropy the string must be.
+	// This will only be used if Pattern is not nil
+	// a value of 0 means that the entropy will not be checked
+	MinEntropy float64 `json:"min_entropy,omitempty"`
 }
 
-// findRuleMatches will search a string's content for any matches to
-// the list of SecretStringRules provided
-func findRuleMatches(content string, rules []Rule) (matches []Match, err error) {
-	for _, r := range rules {
-		for _, s := range r.Pattern.FindStringSubmatch(content) {
-			entropy := CalculateShannonEntropy(s)
-			if entropy < r.MinEntropy {
-				continue
-			}
-			matches = append(matches, Match{
-				Rule: r,
-				Secret: Secret{
-					Value:   s,
-					Entropy: entropy,
-				},
-			})
-		}
+func (r DynamicRule) String() string {
+	var conditions []string
+	if r.Pattern != nil {
+		conditions = append(conditions, fmt.Sprintf("regex '%s'", r.Pattern))
 	}
-	return
+	if r.MinEntropy > 0 {
+		conditions = append(conditions, fmt.Sprintf("minimum entropy of %f", r.MinEntropy))
+	}
+	if r.FilePattern != nil {
+		conditions = append(conditions, fmt.Sprintf("file pattern '%s'", r.FilePattern))
+	}
+	if len(conditions) > 0 {
+		return fmt.Sprintf("'%s' via %s", r.Name, strings.Join(conditions, " and "))
+	}
+	return fmt.Sprintf("'%s'", r.Name)
 }
 
-// DefaultRules is the default list of rules
+// DefaultStaticRules is the default list of rules
 // this list contains rules to match a common
 // set of secrets
 // TODO(improve this list)
-var DefaultRules = []Rule{
+var DefaultStaticRules = []StaticRule{
 	{
 		Pattern: regexp.MustCompile(`[1-9][0-9]+-[0-9a-zA-Z]{40}`),
 		Name:    "Twitter",
@@ -197,9 +201,24 @@ var DefaultRules = []Rule{
 	},
 }
 
-// ParseRules will parse a list of UserRule patterns into regexp.Regexp and a common.SecretStringRule.
+var DefaultDynamicRules = []DynamicRule{
+	{
+		FilePattern: regexp.MustCompile(`^(.*/)*[-\w._]*\.env(\.[-\w._]*)?$`),
+		Name:        ".env file",
+	},
+	{
+		Name:        "Terraform state file",
+		FilePattern: regexp.MustCompile(`^(.*/)*terraform.tfstate$`),
+	},
+	{
+		Name:        "AWS credentials file",
+		FilePattern: regexp.MustCompile(`^(.*/)*\.aws/credentials$`),
+	},
+}
+
+// ParseStaticRules will parse a list of UserRule patterns into regexp.Regexp and a common.SecretStringRule.
 // All rules that result in error are returned in the second variables
-func ParseRules(userRules []config.UserRule) (rules []Rule, errors []config.UserRule) {
+func ParseStaticRules(userRules []config.UserStaticRule) (rules []StaticRule, errors []config.UserStaticRule) {
 	for _, r := range userRules {
 		regex, err := regexp.Compile(r.Pattern)
 		if err != nil {
@@ -209,11 +228,47 @@ func ParseRules(userRules []config.UserRule) (rules []Rule, errors []config.User
 			)
 			errors = append(errors, r)
 		}
-		rules = append(rules, Rule{
+		rules = append(rules, StaticRule{
 			Pattern:    regex,
 			Name:       r.Name,
 			MinEntropy: r.MinEntropy,
 		})
+	}
+	return
+}
+
+// ParseDynamicRules will parse a list of UserRule patterns into regexp.Regexp and a common.SecretStringRule.
+// All rules that result in error are returned in the second variables
+func ParseDynamicRules(userRules []config.UserDynamicRule) (rules []DynamicRule, errors []config.UserDynamicRule) {
+	for _, r := range userRules {
+		var rule DynamicRule
+		rule.Name = r.Name
+		if r.FilePattern != "" {
+			regex, err := regexp.Compile(r.FilePattern)
+			if err != nil {
+				logrus.Errorf(
+					"unable to parse regular expression %s `%s`: %s",
+					r.Name, r.FilePattern, err,
+				)
+				errors = append(errors, r)
+				continue
+			}
+			rule.FilePattern = regex
+		}
+		if r.Pattern != "" {
+			regex, err := regexp.Compile(r.Pattern)
+			if err != nil {
+				logrus.Errorf(
+					"unable to parse regular expression %s `%s`: %s",
+					r.Name, r.Pattern, err,
+				)
+				errors = append(errors, r)
+				continue
+			}
+			rule.Pattern = regex
+			rule.MinEntropy = r.MinEntropy
+		}
+		rules = append(rules, rule)
 	}
 	return
 }

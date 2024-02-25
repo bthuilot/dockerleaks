@@ -41,23 +41,37 @@ var Command = &cobra.Command{
 		imageName, _ := cmd.Flags().GetString("image")
 
 		// Parse the configuration file and user supplied rules
-		spnr = logging.StartSpinner("parsing configuration")
+		spnr = logging.StartSpinner("parsing configuration...")
 		err := viper.Unmarshal(&cfg)
+
 		logrus.Infof("parsing regular expression detection configuration")
-		rules, invalidRules := secrets.ParseRules(cfg.Rules)
+		staticRules, invalidStaticRules := secrets.ParseStaticRules(cfg.StaticRules)
+		dynamicRules, invalidDynamicRules := secrets.ParseDynamicRules(cfg.DynamicRules)
 
 		logging.FinishSpinnerWithError(spnr, err)
-		if len(invalidRules) > 0 && viper.GetBool("ignore-invalid") {
-			for _, iR := range invalidRules {
-				logrus.Debugf("invalid pattern '%s'", iR.Pattern)
+		for _, iR := range invalidStaticRules {
+			logrus.Errorf("invalid static rule 'pattern: %s'", iR.Pattern)
+		}
+		for _, iR := range invalidDynamicRules {
+			logrus.Errorf("invalid dynamic rule 'pattern: %s, file: %s'", iR.Pattern, iR.FilePattern)
+		}
+		if len(invalidStaticRules) > 0 || len(invalidDynamicRules) > 0 {
+			if !cfg.IgnoreInvalidRules {
+				logging.Fatal("invalid rules found, exiting due to flag `ignore-invalid` not set")
 			}
-			logging.Msg("%d invalid rules found, ignoring due to flag `ignore-invalid`", len(invalidRules))
 		}
 
-		detector := secrets.NewDetector(secrets.Opts{UseDefaultRules: !cfg.ExcludeDefaultRules}, rules...)
+		detector := secrets.NewDetector(
+			secrets.Opts{
+				UseDefaultStaticRules:  !cfg.ExcludeDefaultStaticRules,
+				UseDefaultDynamicRules: !cfg.ExcludeDefaultDynamicRules,
+			},
+			staticRules,
+			dynamicRules,
+		)
 		ctx = context.WithValue(ctx, detectorContextKey, detector)
 		// Connect to docker daemon and pull image if necessary
-		spnr = logging.StartSpinner("connecting to docker daemon")
+		spnr = logging.StartSpinner("connecting to docker daemon...")
 		i, err := image.NewImage(imageName)
 		logging.FinishSpinnerWithError(spnr, err)
 
@@ -92,14 +106,13 @@ var Command = &cobra.Command{
 			logging.Header("no secret strings found", logging.H1)
 		} else {
 			logging.Header(fmt.Sprintf("%d secrets found", len(findings)), logging.H1)
-			logging.Msg("")
-			output, err := formatter(findings)
-			if err != nil {
-				logrus.Errorf("error formatting findings: %s", err)
-				logging.Fatal(errorMsgFmt, "error formatting findings")
-			}
-			logging.Msg(output)
 		}
+		output, err := formatter(findings)
+		if err != nil {
+			logrus.Errorf("error formatting findings: %s", err)
+			logging.Fatal(errorMsgFmt, "error formatting findings")
+		}
+		fmt.Print(output)
 	},
 }
 
