@@ -112,7 +112,7 @@ var Command = &cobra.Command{
 			logrus.Errorf("error formatting findings: %s", err)
 			logging.Fatal(errorMsgFmt, "error formatting findings")
 		}
-		fmt.Print(output)
+		fmt.Println(output)
 	},
 }
 

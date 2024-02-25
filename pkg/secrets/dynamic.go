@@ -20,6 +20,12 @@ type FileMatch struct {
 }
 
 func findDynamicRuleMatches(path string, body io.Reader, rules []DynamicRule) (matches []FileMatch, err error) {
+	// TODO: fix this to only read once for all rules, but dont read at all if not needed
+	var content []byte
+	if content, err = io.ReadAll(body); err != nil {
+		return nil, err
+	}
+
 	for _, r := range rules {
 		logrus.Debugf("checking rule %s with %s", r.Name, r.FilePattern)
 		if r.FilePattern != nil && !r.FilePattern.MatchString(path) {
@@ -36,10 +42,6 @@ func findDynamicRuleMatches(path string, body io.Reader, rules []DynamicRule) (m
 		}
 
 		// If the pattern is not nil, we need to check the content of the file
-		var content []byte
-		if content, err = io.ReadAll(body); err != nil {
-			return nil, err
-		}
 		logrus.Debugf("checking content of file %s", path)
 		logrus.Print(string(content))
 		for _, s := range r.Pattern.FindSubmatch(content) {

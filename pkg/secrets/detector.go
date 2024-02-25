@@ -5,19 +5,23 @@ import (
 	"io"
 )
 
-// Detector is the interface for a secrets detector.
-// It is used to search for secrets in text.
+// StaticDetector is the interface for a secrets detector.
+// It is used to search for secrets in a static image
 type StaticDetector interface {
 	// SearchText searches for secrets in the given text.
 	// It returns a slice of matches and an error.
 	SearchText(text string) ([]TextMatch, error)
 }
 
+// DynamicDetector is the interface for a secrets detector.
+// It is used to search for secrets in a dynamic image's tarball.
 type DynamicDetector interface {
 	// SearchFile searches for secrets in the given file.
 	SearchFile(path string, body io.Reader) ([]FileMatch, error)
 }
 
+// Detector is the interface for a secrets detector.
+// It is used to search for secrets in a static image and a dynamic image's tarball.
 type Detector interface {
 	StaticDetector
 	DynamicDetector
