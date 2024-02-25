@@ -5,19 +5,23 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/bthuilot/dockerleaks/internal/config"
 	"github.com/fatih/color"
+	"os"
 	"strings"
 	"time"
 )
 
-func StartSpinner(msg string) (spnr *spinner.Spinner) {
-	spnr = spinner.New(spinner.CharSets[69], time.Second/10)
-	spnr.Prefix = fmt.Sprintf("%s %s ", grayText("=>"), msg)
+func StartSpinner(msg string) *spinner.Spinner {
+	prefix := fmt.Sprintf("%s %s ", grayText("=>"), msg)
 	if !config.ShouldUseSpinner() {
-		Msg(spnr.Prefix)
-		return
+		Msg(prefix + "\n")
+		return nil
 	}
+	spnr := spinner.New(spinner.CharSets[69], time.Second/10,
+		spinner.WithWriterFile(os.Stderr),
+	)
+	spnr.Prefix = prefix
 	spnr.Start()
-	return
+	return spnr
 }
 
 func FinishSpinner(spnr *spinner.Spinner, finalMsg string) {
@@ -26,7 +30,7 @@ func FinishSpinner(spnr *spinner.Spinner, finalMsg string) {
 		return
 	}
 	msg := strings.TrimSpace(spnr.Prefix)
-	spnr.FinalMSG = fmt.Sprintf("%s %s\n", msg, finalMsg)
+	spnr.FinalMSG = fmt.Sprintf("%s %s", msg, finalMsg)
 	if !config.ShouldUseSpinner() {
 		Msg(finalMsg)
 	}
@@ -55,9 +59,9 @@ func grayText(text string) string {
 }
 
 func FinishSpinnerWithError(spnr *spinner.Spinner, err error) {
-	result := successText("complete")
+	result := successText("complete\n")
 	if err != nil {
-		result = errorText("error")
+		result = errorText("error\n")
 	}
 	FinishSpinner(spnr, result)
 	if err != nil {

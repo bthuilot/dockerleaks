@@ -16,15 +16,23 @@ const (
 )
 
 type Finding struct {
-	Secret secrets.Secret `json:"secret"`
-	Rule   secrets.Rule   `json:"rule"`
-	Source Source         `json:"source"`
+	Secret string       `json:"secret,omitempty"`
+	Rule   secrets.Rule `json:"rule"`
+	Source Source       `json:"source"`
+	Path   string       `json:"path,omitempty"`
 }
 
 func (f Finding) String() string {
-	return fmt.Sprintf(`Secret: %s
-Rule: %s
-Source: %s`, f.Secret, f.Rule, f.Source)
+	var lines []string
+	if f.Secret != "" {
+		lines = append(lines, fmt.Sprintf("Secret: %s", f.Secret))
+	}
+	lines = append(lines, fmt.Sprintf("Rule: %s", f.Rule))
+	lines = append(lines, fmt.Sprintf("Source: %s", f.Source))
+	if f.Path != "" {
+		lines = append(lines, fmt.Sprintf("Path: %s", f.Path))
+	}
+	return strings.Join(lines, "\n")
 }
 
 type Formatter func([]Finding) (string, error)

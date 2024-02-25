@@ -10,7 +10,7 @@ func Static(img image.Image, detector secrets.Detector) (findings []Finding, err
 	var (
 		envVars   []image.EnvVar
 		buildArgs []image.BuildArg
-		matches   []secrets.Match
+		matches   []secrets.TextMatch
 	)
 
 	envVars, err = img.ParseEnvVars()
@@ -26,7 +26,7 @@ func Static(img image.Image, detector secrets.Detector) (findings []Finding, err
 		}
 		for _, m := range matches {
 			findings = append(findings, Finding{
-				Secret: m.Secret,
+				Secret: m.Secret.String(),
 				Rule:   m.Rule,
 				Source: EnvVar,
 			})
@@ -45,7 +45,7 @@ func Static(img image.Image, detector secrets.Detector) (findings []Finding, err
 		}
 		for _, m := range matches {
 			findings = append(findings, Finding{
-				Secret: m.Secret,
+				Secret: m.Secret.String(),
 				Rule:   m.Rule,
 				Source: BuildArgument,
 			})

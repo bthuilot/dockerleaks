@@ -11,6 +11,5 @@ func Fatal(format string, a ...any) {
 }
 
 func Msg(format string, args ...any) {
-	fmt.Printf(format, args...)
-	fmt.Println()
+	_, _ = fmt.Fprintf(os.Stderr, format, args...)
 }

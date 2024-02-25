@@ -2,10 +2,14 @@ package image
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"github.com/bthuilot/dockerleaks/pkg/image/container"
 	"github.com/docker/distribution/reference"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
+	"io"
 )
 
 // Image represents a built docker image
@@ -22,8 +26,11 @@ type Image interface {
 	Pull() error
 	//ParseFS() (fs.FS, error)
 
-	// StartContainer will start a container from this image
-	StartContainer() (Container, error)
+	// CreateContainer will start a container from this image
+	CreateContainer() (container.Container, error)
+
+	// DestroyContainer will remove a container from the docker daemon
+	DestroyContainer(container.Container) error
 }
 
 // image is the concrete implementation of the Image interface
@@ -61,4 +68,38 @@ func NewImage(name string) (Image, error) {
 		cli: cli,
 		ctx: ctx,
 	}, err
+}
+
+// Pull will pull down the image from remote.
+func (i image) Pull() error {
+	reader, err := i.cli.ImagePull(i.ctx, i.ref.String(), types.ImagePullOptions{})
+	if err != nil {
+		logrus.Errorf("failure pulling docker image '%s': %s", i.ref.String(), err)
+		return errors.New("unable to pull docker image")
+	}
+
+	decoder := json.NewDecoder(reader)
+	defer reader.Close()
+	for {
+		var message interface{}
+		if err = decoder.Decode(&message); errors.Is(err, io.EOF) {
+			logrus.Debug("end of image pull")
+			break
+		} else if err != nil {
+			logrus.Errorf("error while decoding status from pull: %s", err)
+			return errors.New("unable to pull image")
+		}
+		// TODO(refine to display status only when complete a layer using info)
+		logrus.Debug(message)
+	}
+	return nil
+}
+
+func (i image) Delete() error {
+	_, err := i.cli.ImageRemove(i.ctx, i.ref.String(), types.ImageRemoveOptions{})
+	if err != nil {
+		logrus.Errorf("failure removing docker image '%s': %s", i.ref.String(), err)
+		return errors.New("unable to remove docker image")
+	}
+	return nil
 }

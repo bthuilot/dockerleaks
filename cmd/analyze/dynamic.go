@@ -16,11 +16,11 @@ var dynamic = &cobra.Command{
 		img, detector := parseContext(ctx) // will exit if error
 
 		spnr := logging.StartSpinner("beginning dynamic analysis...")
+
 		findings, err := analysis.Dynamic(img, detector)
 		logging.FinishSpinnerWithError(spnr, err) // Exit if error
 
 		ctx = context.WithValue(ctx, findingsContextKey, findings)
 		cmd.SetContext(ctx)
 	},
-	Args: cobra.MinimumNArgs(1), // Require at least one subcommand
 }

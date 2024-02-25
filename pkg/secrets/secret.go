@@ -13,6 +13,9 @@ type Secret struct {
 }
 
 func (s Secret) String() string {
+	if s.Value == "" {
+		return ""
+	}
 	if viper.GetBool(config.ViperUnmaskKey) {
 		return s.Value
 	}
