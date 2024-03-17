@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -14,14 +12,17 @@ func initViper() error {
 	viper.AddConfigPath("/etc/dockerleaks/")
 	viper.AddConfigPath("$HOME/.dockerleaks")
 	viper.AddConfigPath(".")
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// TODO(somehow log this after logger set up)
-		} else {
-			logrus.Errorf("unable to parse in configuration: %s", err)
-			return fmt.Errorf("unable to parse configuration file")
-		}
-	}
 
-	return nil
+	if viper.IsSet(ViperConfigFileKey) {
+		viper.SetConfigFile(viper.GetString(ViperConfigFileKey))
+	}
+	//if err := viper.ReadInConfig(); err != nil {
+	//var configFileNotFoundError viper.ConfigFileNotFoundError
+	//if errors.As(err, &configFileNotFoundError) {
+	//	_, _ = fmt.Fprintf(os.Stderr, "unable to read config file, exiting\n")
+	//	os.Exit(1)
+	//}
+	//}
+
+	return viper.ReadInConfig()
 }
