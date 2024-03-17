@@ -8,17 +8,17 @@ type TextMatch struct {
 	Secret Secret
 	// FullText is the full text that was searches
 	FullText string
-	// StartPos is the starting position of the match
-	StartPos int
-	// EndPos is the ending position of the match
-	EndPos int
+	//// StartPos is the starting position of the match
+	//StartPos int
+	//// EndPos is the ending position of the match
+	//EndPos int
 }
 
 // findRuleMatches will search a string's content for any matches to
 // the list of SecretStringRules provided
 func findStaticRuleMatches(content string, rules []StaticRule) (matches []TextMatch, err error) {
 	for _, r := range rules {
-		for _, s := range r.Pattern.FindStringSubmatch(content) {
+		for _, s := range r.Pattern.FindAllString(content, -1) {
 			entropy := CalculateShannonEntropy(s)
 			if entropy < r.MinEntropy {
 				continue
@@ -29,6 +29,7 @@ func findStaticRuleMatches(content string, rules []StaticRule) (matches []TextMa
 					Value:   s,
 					Entropy: entropy,
 				},
+				FullText: content,
 			})
 		}
 	}

@@ -7,8 +7,8 @@ import (
 const (
 	ViperLogLevelKey     = "logLevel"
 	ViperUnmaskKey       = "unmaskValues"
-	ViperExcludeKey      = "excludeDefaultRules"
 	ViperDisableColorKey = "disableColor"
+	ViperConfigFileKey   = "configFile"
 )
 
 // File is the user configuration file for the application
@@ -67,6 +67,10 @@ func Init() error {
 	if err := initViper(); err != nil {
 		return err
 	}
-	initLogger(viper.GetString(ViperLogLevelKey))
-	return nil
+
+	logLevel := "info"
+	if viper.IsSet(ViperLogLevelKey) {
+		logLevel = viper.GetString(ViperLogLevelKey)
+	}
+	return initLogger(logLevel)
 }

@@ -19,8 +19,8 @@ func (s Secret) String() string {
 	if viper.GetBool(config.ViperUnmaskKey) {
 		return s.Value
 	}
-	if len(s.Value) < 4 {
-		return "********"
+	if len(s.Value) < 6 {
+		return "*****"
 	}
-	return s.Value[:3] + "********" + s.Value[len(s.Value)-3:]
+	return s.Value[:3] + "*****" + s.Value[len(s.Value)-3:]
 }

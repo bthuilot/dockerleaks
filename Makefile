@@ -10,6 +10,10 @@ build-docker:
 test:
 	@go test -v ./...
 
+test-coverage:
+	@go test -coverprofile=coverage.out ./...
+	@go tool cover -html=coverage.out -o coverage.html
+
 lint:
 	@test -z $(gofmt -l .)
 	@golangci-lint run

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io"
@@ -28,7 +29,7 @@ const (
 
 // initLogger will initialize the logging configuration of the application
 // and set the logging level to the given LoggingLevel. Defaults to Off
-func initLogger(level LoggingLevel) {
+func initLogger(level LoggingLevel) error {
 	logrus.SetOutput(os.Stderr)
 	switch strings.ToUpper(level) {
 	case Debug:
@@ -40,10 +41,11 @@ func initLogger(level LoggingLevel) {
 	case Error:
 		logrus.SetLevel(logrus.ErrorLevel)
 	case Off:
-		fallthrough
-	default:
 		logrus.SetOutput(io.Discard)
+	default:
+		return fmt.Errorf("invalid log level: %s", level)
 	}
+	return nil
 }
 
 // ShouldUseSpinner will return true if the "stylized"
@@ -53,5 +55,5 @@ func ShouldUseSpinner() bool {
 
 // ShouldUseColor will return true, if colored output should be used
 func ShouldUseColor() bool {
-	return !viper.GetBool("disable_color")
+	return !viper.GetBool(ViperDisableColorKey)
 }

@@ -43,11 +43,6 @@ func init() {
 	if err := rootCmd.MarkPersistentFlagFilename("config", "yaml", "yml"); err != nil {
 		log.Fatalf("err marking config as filename %s", err)
 	}
-
-	if err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config")); err != nil {
-		log.Fatalf("err binding config %s", err)
-	}
-
 }
 
 func bindFlags() {
@@ -55,6 +50,10 @@ func bindFlags() {
 	_ = viper.BindPFlag(config.ViperDisableColorKey, rootCmd.PersistentFlags().Lookup("disable-color"))
 	if err := viper.BindPFlag(config.ViperUnmaskKey, rootCmd.PersistentFlags().Lookup("unmask")); err != nil {
 		log.Fatalf("err binding reveal %s", err)
+	}
+
+	if err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config")); err != nil {
+		log.Fatalf("err binding config %s", err)
 	}
 }
 
