@@ -1,5 +1,9 @@
 # Dockerleaks
 
+> [!WARNING]  
+> As of Nov 24, 2024 this repository is now archived
+> and developers should use [trufflehog](https://github.com/trufflesecurity/trufflehog) instead
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/bthuilot/dockerleaks)](https://goreportcard.com/report/github.com/bthuilot/dockerleaks)
 [![License](https://img.shields.io/github/license/bthuilot/dockerleaks)](./LICENSE)
 
